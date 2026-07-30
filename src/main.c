@@ -33,10 +33,12 @@ Curve * createGraph(size_t quality, double (* func)(double));
 Curve * createPolarCurve(size_t quality, double (* func)(double));
 void destroyCurve(Curve * curve);
 void displayCurve(Curve * curve, World * world, const Color color);
+void captureCurve(Curve * curve, World * world, const char * name, const Color background, const Color axies, const Color line);
 
 // curves
 double lemniscata2(double phi);
-double cadioide2(double phi);
+double cardioide2(double phi);
+double espiralLogaritmica(double phi);
 
 
 /*************************************************************
@@ -53,8 +55,15 @@ int main(int argc, char const *argv[])
         return -1;
     }    
 
-    Curve * card = createPolarCurve(50, cadioide2);
+    Curve * card = createPolarCurve(50, cardioide2);
     if (card == NULL)
+    {
+        perror("Problems to create a polar curve (malloc)");
+        return -1;
+    }
+
+    Curve * espLog = createPolarCurve(100, espiralLogaritmica);
+    if (espLog == NULL)
     {
         perror("Problems to create a polar curve (malloc)");
         return -1;
@@ -63,6 +72,8 @@ int main(int argc, char const *argv[])
     InitWindow(world.windowWidth, world.windowHeight, "Testing The Origin");
 
     SetTargetFPS(60);
+
+    captureCurve(card, &world, "teste_da_funcao_print.png", RED, GREEN, BLUE);
 
     while (!WindowShouldClose())
     {
@@ -124,17 +135,30 @@ void destroyCurve(Curve * curve)
 
 void displayCurve(Curve * curve, World * world, const Color color)
 {
-    for (size_t i = 0; i < curve->size - 1; i++)
+    for (size_t i = 1; i < curve->size; i++)
     {
-        int startX = (curve->points[i].x) * world->scale + world->origem.x;
-        int startY = world->windowHeight - ((curve->points[i].y) * world->scale + world->origem.y);
+        int startX = (curve->points[i - 1].x) * world->scale + world->origem.x;
+        int startY = world->windowHeight - ((curve->points[i - 1].y) * world->scale + world->origem.y);
 
-        int endX = (curve->points[i + 1].x) * world->scale + world->origem.x;
-        int endY = world->windowHeight - ((curve->points[i + 1].y) * world->scale + world->origem.y);
+        int endX = (curve->points[i].x) * world->scale + world->origem.x;
+        int endY = world->windowHeight - ((curve->points[i].y) * world->scale + world->origem.y);
 
         DrawLine(startX, startY, endX, endY, color);
     }
     
+}
+
+void captureCurve(Curve * curve, World * world, const char * name, const Color background, const Color axes, const Color line)
+{
+    BeginDrawing();    
+    ClearBackground(background);
+    axis(world, axes);
+    displayCurve(curve, world, line);
+    EndDrawing();
+
+    Image screen = LoadImageFromScreen();
+    ExportImage(screen, name);
+    UnloadImage(screen);
 }
 
 
@@ -147,7 +171,12 @@ double lemniscata2(double phi) // r = a²cos(2 * phi), a > 0.
     return 4 * cos(2 * phi);
 }
 
-double cadioide2(double phi) // r = a(1 + cos(phi)), a > 0
+double cardioide2(double phi) // r = a(1 + cos(phi)), a > 0
 {
     return 2 + 2 * cos(phi);
+}
+
+double espiralLogaritmica(double phi) // r = exp(a * phi)
+{
+    return exp(0.5*phi);
 }

@@ -29,7 +29,7 @@ typedef struct
 **************************************************************/
 
 void axis(World * world, const Color color);
-Curve * createGraph(size_t quality, double (* func)(double));
+Curve * createGraph(size_t quality, double from, double upto, double (* func)(double));
 Curve * createPolarCurve(size_t quality, double (* func)(double));
 void destroyCurve(Curve * curve);
 void displayCurve(Curve * curve, World * world, const Color color);
@@ -40,6 +40,9 @@ double lemniscata2(double phi);
 double cardioide2(double phi);
 double espiralLogaritmica(double phi);
 
+double myCos(double phi);
+double quadratic(double x);
+
 
 /*************************************************************
  *  Main
@@ -48,14 +51,14 @@ int main(int argc, char const *argv[])
 {
     World world = {50, {500, 400}, 1000, 800};
 
-    Curve * lemniscata = createPolarCurve(100, lemniscata2);
+    Curve * lemniscata = createPolarCurve(300, lemniscata2);
     if (lemniscata == NULL)
     {
         perror("Problems to create a polar curve (malloc)");
         return -1;
     }    
 
-    Curve * card = createPolarCurve(50, cardioide2);
+    Curve * card = createPolarCurve(300, cardioide2);
     if (card == NULL)
     {
         perror("Problems to create a polar curve (malloc)");
@@ -64,6 +67,20 @@ int main(int argc, char const *argv[])
 
     Curve * espLog = createPolarCurve(100, espiralLogaritmica);
     if (espLog == NULL)
+    {
+        perror("Problems to create a polar curve (malloc)");
+        return -1;
+    }
+
+    Curve * cosseno = createGraph(100, -10, 10, myCos);
+    if (cosseno == NULL)
+    {
+        perror("Problems to create a polar curve (malloc)");
+        return -1;
+    }
+
+    Curve * parabola = createGraph(100, -10, 10, quadratic);
+    if (quadratic == NULL)
     {
         perror("Problems to create a polar curve (malloc)");
         return -1;
@@ -84,11 +101,16 @@ int main(int argc, char const *argv[])
 
         displayCurve(lemniscata, &world, PURPLE);
         displayCurve(card, &world, YELLOW);
+        displayCurve(cosseno, &world, WHITE);
+        displayCurve(parabola, &world, RED);
 
         EndDrawing();
     }    
 
     destroyCurve(lemniscata);
+    destroyCurve(card);
+    destroyCurve(espLog);
+    destroyCurve(cosseno);
 
     return 0;
 }
@@ -120,7 +142,32 @@ Curve * createPolarCurve(size_t quality, double (* func)(double))
         points[i].y = func((2*PI*i)/quality) * sin((2*PI*i)/quality);
     }    
 
-    Curve * curve = malloc(sizeof(Curve));
+    Curve * curve = malloc(sizeof(curve));
+    curve->points = points;
+    curve->size = quality;
+
+    return curve;
+}
+
+Curve * createGraph(size_t quality, double from, double upto, double (* func)(double))
+{
+    Vector2 * points = malloc(quality * sizeof(Vector2));
+    if (points == NULL)
+    {
+        perror("Points allocation");
+        return NULL;
+    }
+
+    double step = (upto - from)/quality;
+    double x = from;
+
+    for (size_t i = 0; i < quality; i++)
+    {
+        points[i].x = x + step * i;
+        points[i].y = func(x + step * i);
+    }
+        
+    Curve * curve = malloc(sizeof(curve));
     curve->points = points;
     curve->size = quality;
 
@@ -179,4 +226,14 @@ double cardioide2(double phi) // r = a(1 + cos(phi)), a > 0
 double espiralLogaritmica(double phi) // r = exp(a * phi)
 {
     return exp(0.5*phi);
+}
+
+double myCos(double phi)
+{
+    return cos(phi);
+}
+
+double quadratic(double x)
+{
+    return x*x;
 }

@@ -80,7 +80,7 @@ int main(int argc, char const *argv[])
     }
 
     Curve * parabola = createGraph(100, -10, 10, quadratic);
-    if (quadratic == NULL)
+    if (parabola == NULL)
     {
         perror("Problems to create a polar curve (malloc)");
         return -1;
@@ -142,7 +142,7 @@ Curve * createPolarCurve(size_t quality, double (* func)(double))
         points[i].y = func((2*PI*i)/quality) * sin((2*PI*i)/quality);
     }    
 
-    Curve * curve = malloc(sizeof(curve));
+    Curve * curve = malloc(sizeof(Curve));
     curve->points = points;
     curve->size = quality;
 
@@ -167,7 +167,7 @@ Curve * createGraph(size_t quality, double from, double upto, double (* func)(do
         points[i].y = func(x + step * i);
     }
         
-    Curve * curve = malloc(sizeof(curve));
+    Curve * curve = malloc(sizeof(Curve));
     curve->points = points;
     curve->size = quality;
 

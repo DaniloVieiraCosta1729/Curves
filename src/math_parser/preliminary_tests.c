@@ -262,7 +262,7 @@ Output * initializeOutput()
         return NULL;
     }
 
-    Output * output = malloc(sizeof(output));
+    Output * output = malloc(sizeof(Output));
     
     output->size = 0;
     output->elements = elements;

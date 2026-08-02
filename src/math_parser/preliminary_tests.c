@@ -9,8 +9,8 @@
  * Constants
 **************************************************************/
 
-#define TOKENS_OUTPUT "0123456789x"
-#define TOKENS_OUTPUT_SIZE 11
+#define TOKENS_OUTPUT "0123456789x."
+#define TOKENS_OUTPUT_SIZE 12
 
 #define TOKENS_STACK "-+/*"
 #define TOKENS_STACK_SIZE 4
@@ -281,7 +281,7 @@ void handleChar(char character, Stack4Stacks * stack, Output * output)
 
     if (isToken(character, TOKENS_STACK, TOKENS_STACK_SIZE))
     {
-        send2output(',', output);
+        send2output(' ', output);
         pop_until_less_precedence(character, stack, output);        
         push_element(character, stack);
         return;
@@ -314,12 +314,82 @@ void parser(const char * expression, size_t length, Stack4Stacks * stack, Output
     pop_all(stack, output);
 }
 
+// my slow memset (I will going to search about vector registers for x86-64 and then make a nicer version in assembly)
+void my_memset(void * target, char filler, size_t size)
+{
+    size_t toRepeat = 0;
+
+    if (size >= 8)
+    {
+        size_t times = size / sizeof(size_t);
+        char * trick1 = (char *)&toRepeat;
+        for (size_t i = 0; i < sizeof(size_t); i++)
+        {
+            trick1[i] = filler;
+        }
+
+        size_t * trick2 = (size_t *)target;
+        for (size_t i = 0; i < times; i++)
+        {
+            trick2[i] = toRepeat;
+        }
+
+        int sobreposition = sizeof(size_t);
+        trick2 = (size_t *)((char *)target + size - sobreposition);
+        *trick2 = toRepeat;        
+        
+        return;
+    } // I suspect it's awful for performance and readability, but, since it's only a hobby, I'll choose the implementation that makes me more motivated. In a professional environment, what moves me more is making something reliable with a good performance for the specific case and reaching the deadline (without sacrificing the safety for the deadline, though).
+
+    char * result = (char *)target;
+
+    for (size_t i = 0; i < size; i++)
+    {
+        result[i] = filler;
+    }   
+    
+}
+
+// expects the buffer to have a size bigger than the length passed as parameter.
+void copyString(char * destine, const char * origin, size_t length) // I want to avoid the string.h in this parser, because It's the first time I make this type of parser.
+{
+    my_memset(destine, 0, length);
+
+    for (size_t i = 0; i < length; i++)
+    {
+        destine[i] = origin[i];
+        if (origin[i] == '\0')
+        {
+            return;
+        }        
+    }
+
+    destine[length] = 0;
+}
+
 /*************************************************************
  * Main
 **************************************************************/
 
 int main(int argc, char const *argv[])
 {
+    if (argc > 2)
+    {
+        printf("Usage: %s <expression without spaces>", argv[0]);
+        return -1;
+    }
+    
+    char * expression = "156*7+(3+7*1)";
+    char text[256] = {0}; 
+
+    copyString(text, expression, 255);
+
+    if (argc == 2)
+    {
+        copyString(text, argv[1], 255);
+    }
+    
+
     Output * output = initializeOutput();
     if (output == NULL)
     {
@@ -333,11 +403,10 @@ int main(int argc, char const *argv[])
         return -1;
     }
 
-    const char * expression = "156*7+(3+7*1)";
 
-    parser(expression, 13, stack, output);
+    parser(text, 13, stack, output);
 
-    printf("Input: %s\nOutput: %s\n", expression, output->elements);
+    printf("Input: %s\nOutput: %s\n", text, output->elements);
 
     return 0;
 }

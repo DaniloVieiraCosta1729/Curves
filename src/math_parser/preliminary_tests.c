@@ -334,8 +334,8 @@ void my_memset(void * target, char filler, size_t size)
             trick2[i] = toRepeat;
         }
 
-        int sobreposition = sizeof(size_t);
-        trick2 = (size_t *)((char *)target + size - sobreposition);
+        int superposition = sizeof(size_t);
+        trick2 = (size_t *)((char *)target + size - superposition);
         *trick2 = toRepeat;        
         
         return;

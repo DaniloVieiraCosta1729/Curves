@@ -25,11 +25,14 @@
 #define DATA_SIZE 64
 #define MAX_TOKENS_ALLOWED 1024
 
-typedef enum {PLUS = 2, MINUS, TIMES, DIVIDE, NUMBER, VARIABLE, RPARENTHESES, LPARENTHESES} TOKEN;
+typedef enum {PLUS = 2, MINUS = 2, TIMES = 3, DIVIDE = 3, NUMBER, VARIABLE, RPARENTHESES, LPARENTHESES} TOKEN;
 
 const char is_alphabet[256] = {
     [0] = 1,
     [10] = 1,
+    ['0'] = NUMBER, ['1'] = NUMBER, ['2'] = NUMBER, ['3'] = NUMBER, ['4'] = NUMBER, 
+    ['5'] = NUMBER, ['6'] = NUMBER, ['7'] = NUMBER, ['8'] = NUMBER, ['9'] = NUMBER,
+    ['.'] = NUMBER,
     ['x'] = VARIABLE, ['y'] = VARIABLE, ['z'] = VARIABLE,
     ['('] = RPARENTHESES, [')'] = LPARENTHESES,
     ['+'] = PLUS, ['-'] = MINUS, ['*'] = TIMES, ['/'] = DIVIDE
@@ -49,6 +52,14 @@ typedef struct
     size_t capacity;
     Data * data;
 } Expression;
+
+typedef struct Lexer_fsm
+{
+    void (*delta)(Lexer_fsm *);
+    const char * input;
+    Lexer_State state;
+    int index;
+} Lexer_fsm;
 
 
 /*************************************************************
@@ -113,4 +124,30 @@ void deltaError();
 
 Expression * scan(const char * expression, size_t length)
 {
+}
+
+void deltaReady(Lexer_fsm * fsm)
+{
+    if (is_alphabet[fsm->input[fsm->index]] == VARIABLE)
+    {
+        fsm->delta = deltaVariable;
+        fsm->state = VARIABLE_LEXER;
+        
+        return;
+    }
+
+    if (is_alphabet[fsm->input[fsm->index]] == NUMBER)
+    {
+        fsm->delta = deltaDigit;
+        fsm->state = DIGIT_LEXER;
+        
+        return;
+    }   
+    
+    if (is_alphabet[fsm->input[fsm->index]] == END_LEXER)
+    {
+        // end
+        
+        return;
+    }  
 }

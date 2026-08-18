@@ -77,7 +77,7 @@ Expression * createExpression(size_t capacity)
     
     expression->capacity = capacity;
     expression->size = 0;
-    expression->data = NULL; // Since each lexeme will have a different size (operators consist of a few characters, but numbers can be arbitrarily long), I'll make an separate function to add Data to the Expression. 
+    expression->data = data; // Since each lexeme will have a different size (operators consist of a few characters, but numbers can be arbitrarily long), I'll make an separate function to add Data to the Expression. 
     
     return expression;
 }
